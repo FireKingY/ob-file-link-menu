@@ -1,3 +1,5 @@
+import { fileActionIcon, fileMenuActions, runFileMenuAction, type FileMenuHandlers } from './actions';
+
 export type FileTarget = { element: HTMLElement; path: string };
 
 export function fileTargetAt(target: EventTarget | null): FileTarget | null {
@@ -10,13 +12,7 @@ export function fileTargetAt(target: EventTarget | null): FileTarget | null {
   return { element, path };
 }
 
-type MenuOptions = {
-  document: Document;
-  copy: (path: string) => Promise<void>;
-  copyFile: (path: string) => Promise<void>;
-  reveal: (path: string) => Promise<void>;
-  notify: (message: string, error?: boolean) => void;
-};
+type MenuOptions = FileMenuHandlers & { document: Document };
 
 export function installFileLinkMenu({ document, copy, copyFile, reveal, notify }: MenuOptions): () => void {
   const view = document.defaultView!;
@@ -59,34 +55,17 @@ export function installFileLinkMenu({ document, copy, copyFile, reveal, notify }
       if (restoreFocus && previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus({ preventScroll: true });
     };
     closeMenu = close;
-    const actions = [
-      { id: 'copy-path', label: '复制文件地址', run: copy, success: '已复制文件地址', icon: 'M8 4H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h10M9 2h10a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z' },
-      { id: 'copy-file', label: '复制文件', run: copyFile, success: '已复制文件，可在 Finder 中粘贴', icon: 'M14 2H6a1 1 0 0 0-1 1v18a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7l-5-5Zm0 0v5h5M8 12h8M8 16h8' },
-      { id: 'reveal-file', label: '在 Finder 中打开', run: reveal, success: '已在 Finder 中打开', icon: 'M3 5a1 1 0 0 1 1-1h5l2 3h9a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5Z' },
-    ];
+    const actions = fileMenuActions({ copy, copyFile, reveal, notify });
     for (const action of actions) {
       const button = document.createElement('button');
       button.type = 'button';
       button.dataset.action = action.id;
       button.setAttribute('role', 'menuitem');
       button.tabIndex = -1;
-      const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      icon.setAttribute('viewBox', '0 0 24 24');
-      icon.setAttribute('fill', 'none');
-      icon.setAttribute('stroke', 'currentColor');
-      icon.setAttribute('stroke-width', '1.6');
-      icon.setAttribute('aria-hidden', 'true');
-      const shape = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      shape.setAttribute('d', action.icon);
-      icon.append(shape);
-      button.append(icon, document.createTextNode(action.label));
+      button.append(fileActionIcon(document, action.icon), document.createTextNode(action.label));
       button.addEventListener('click', () => {
         close(true);
-        void action.run(target.path).then(() => notify(action.success), (error: unknown) => {
-          const message = action.id === 'copy-file' && error instanceof Error ? error.message
-            : action.id === 'copy-path' ? '复制失败，请重试。' : '无法在 Finder 中打开，请确认文件仍然存在且可访问。';
-          notify(message, true);
-        });
+        runFileMenuAction(action, target.path, notify);
       }, { signal: events.signal });
       menu.append(button);
     }

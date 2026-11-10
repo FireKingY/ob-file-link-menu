@@ -1,6 +1,6 @@
 {
   "name": "file-link-menu",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "Add files to the current conversation, copy files and paths, and reveal files in Finder.",
   "type": "module",
   "private": true,

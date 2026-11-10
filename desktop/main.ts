@@ -1,6 +1,8 @@
 import { installFileLinkMenu } from './menu';
 import { copyFileFromHost } from './copy-file';
-import { installSessionFileHandoff } from './send-to-session';
+import { addFileToCurrentComposer, installSessionFileHandoff } from './send-to-session';
+import { installFileTabMenu } from './file-tabs';
+import type { FileMenuHandlers } from './actions';
 
 declare global {
   interface Window {
@@ -17,11 +19,11 @@ if (window.__OPENCHAMBER_PLATFORM__ === 'darwin' && window.__OPENCHAMBER_DESKTOP
   const notices = new Set<HTMLElement>();
   const timers = new Set<ReturnType<typeof setTimeout>>();
   const disposeSessionHandoff = installSessionFileHandoff(document);
-  const dispose = installFileLinkMenu({
-    document,
+  const handlers: FileMenuHandlers = {
     copy: (path) => navigator.clipboard.writeText(path),
     copyFile: copyFileFromHost,
     reveal: async (path) => { await bridge.invoke('desktop_reveal_path', { path }); },
+    send: async (path) => { addFileToCurrentComposer(document, path); },
     notify: (message, error = false) => {
       const notice = document.createElement('div');
       notice.dataset.fileLinkNotice = '';
@@ -33,10 +35,13 @@ if (window.__OPENCHAMBER_PLATFORM__ === 'darwin' && window.__OPENCHAMBER_DESKTOP
       const timer = setTimeout(() => { notice.remove(); notices.delete(notice); timers.delete(timer); }, error ? 6000 : 2200);
       timers.add(timer);
     },
-  });
+  };
+  const dispose = installFileLinkMenu({ document, ...handlers });
+  const disposeFileTabs = installFileTabMenu(document, handlers);
   window.__OPENCHAMBER_FILE_LINK_MENU_DISPOSE__ = () => {
     dispose();
     disposeSessionHandoff();
+    disposeFileTabs();
     for (const timer of timers) clearTimeout(timer);
     for (const notice of notices) notice.remove();
     delete window.__OPENCHAMBER_FILE_LINK_MENU_DISPOSE__;
