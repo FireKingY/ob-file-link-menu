@@ -1,0 +1,50 @@
+# dependencies (bun install)
+node_modules
+
+# output
+out
+dist
+*.tgz
+
+# code coverage
+coverage
+*.lcov
+
+# logs
+logs
+_.log
+report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+
+# dotenv environment variable files
+.env*
+!.env.example
+
+# local credentials and backups
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+credentials*.json
+*.bak
+*.backup
+backups/
+desktop-backups/
+*.log
+
+# local agent and application state
+.openchamber/
+.opencode/
+.claude/
+.codex/
+
+# caches
+.eslintcache
+.cache
+*.tsbuildinfo
+
+# IntelliJ based IDEs
+.idea
+
+# Finder (MacOS) folder config
+.DS_Store

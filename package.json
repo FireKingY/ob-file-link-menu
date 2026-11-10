@@ -1,0 +1,50 @@
+{
+  "name": "file-link-menu",
+  "version": "1.2.1",
+  "description": "Add files to the current conversation, copy files and paths, and reveal files in Finder.",
+  "type": "module",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FireKingY/ob-file-link-menu.git"
+  },
+  "scripts": {
+    "build": "openchamber-guest-bundle background/main.ts background/main.js && openchamber-guest-bundle --node service/main.ts service/main.js && openchamber-guest-bundle desktop/main.ts desktop/main.js",
+    "check": "openchamber-guest-check",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "desktop:plan": "node scripts/desktop-adapter.mjs plan",
+    "desktop:apply": "node scripts/desktop-adapter.mjs apply",
+    "desktop:remove": "node scripts/desktop-adapter.mjs remove"
+  },
+  "openchamber": {
+    "apiVersion": 1,
+    "engines": { "openchamber": ">=2.7.0" },
+    "id": "file-link-menu",
+    "name": "文件链接菜单",
+    "icon": "folder-open",
+    "contributes": {
+      "background": { "entry": "background/index.html" },
+      "actions": [
+        { "id": "copy-path", "label": "复制文件地址", "where": "file", "mode": "background", "icon": "file-copy" },
+        { "id": "copy-file", "label": "复制文件", "where": "file", "mode": "background", "icon": "file-copy" },
+        { "id": "reveal-file", "label": "在 Finder 中打开", "where": "file", "mode": "background", "icon": "folder-open" },
+        { "id": "send-to-session", "label": "发送到当前会话", "where": "file", "mode": "background", "icon": "send-plane" }
+      ],
+      "service": {
+        "entry": "service/main.js",
+        "runtime": "host",
+        "permissions": { "exec": ["open", "osascript"] }
+      }
+    }
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@openchamber/sdk": "2.7.0"
+  }
+}
